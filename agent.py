@@ -24,7 +24,7 @@ resolving and refuses a belief that was edited after commit.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import argparse
 import json
@@ -51,6 +51,7 @@ class Belief:
     confidence: float
     rationale: str
     falsifiable_when: str
+    expiry: str
 
     def __post_init__(self):
         if not 0.0 <= self.confidence <= 1.0:
@@ -68,6 +69,8 @@ def p_no_m5_in_one_hour() -> float:
 
 def step1_state_belief() -> Belief:
     p = p_no_m5_in_one_hour()
+    now = datetime.now(timezone.utc)
+    expiry = (now + timedelta(hours=1)).isoformat(timespec="seconds")
     return Belief(
         claim=(f"No earthquake of magnitude >= {M5_THRESHOLD} is present in the "
                "current USGS all_hour feed."),
@@ -81,6 +84,7 @@ def step1_state_belief() -> Belief:
             f"any feature has properties.mag >= {M5_THRESHOLD} "
             "(USGS path: features[].properties.mag)."
         ),
+        expiry=expiry,
     )
 
 
@@ -186,6 +190,8 @@ def do_commit() -> dict:
         "belief_id": _next_belief_id(entries, created_at),
         "claim": belief.claim,
         "confidence": belief.confidence,
+        "falsification_condition": belief.falsifiable_when,
+        "expiry": belief.expiry,
         "predicate": predicate.render(),
         "created_at": created_at.isoformat(timespec="seconds"),
     }
