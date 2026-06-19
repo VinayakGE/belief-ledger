@@ -1,0 +1,28 @@
+name: Ledger Cycle
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Commit belief
+        run: python3 agent.py commit
+      - name: Observe measurement
+        run: python3 agent.py observe
+      - name: Push ledger
+        run: |
+          git config user.name "belief-ledger-bot"
+          git config user.email "noreply@github.com"
+          git add ledger.jsonl
+          git commit -m "Ledger cycle $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+          git push
