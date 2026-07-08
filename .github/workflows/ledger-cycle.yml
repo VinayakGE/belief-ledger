@@ -1,8 +1,8 @@
 name: Ledger Cycle
 
 on:
-  schedule:
-    - cron: '0 * * * *'
+  # Scheduler disabled: Reference Experiment 001 complete at Run 175 (2026-07-08).
+  # Workflow preserved so the experiment can be restarted under identical conditions.
   workflow_dispatch:
 
 jobs:
